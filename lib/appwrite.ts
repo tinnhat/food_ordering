@@ -1,5 +1,5 @@
-import { CreateUserPrams, SignInParams } from '@/type'
-import { Account, Avatars, Client, Databases, ID, Query } from 'react-native-appwrite'
+import { CreateUserPrams, GetMenuParams, SignInParams } from '@/type'
+import { Account, Avatars, Client, Databases, ID, Query, Storage } from 'react-native-appwrite'
 
 export const config = {
   platform: 'com.nt.foodOrdering',
@@ -7,6 +7,11 @@ export const config = {
   projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID!,
   databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID!,
   userCollectionId: process.env.EXPO_PUBLIC_APPWRITE_USER_COLLECTION_ID!,
+  categoryCollectionId: process.env.EXPO_PUBLIC_APPWRITE_CATEGORY_COLLECTION_ID!,
+  menuCollectionId: process.env.EXPO_PUBLIC_APPWRITE_MENU_COLLECTION_ID!,
+  customizationCollectionId: process.env.EXPO_PUBLIC_APPWRITE_CUSTOMIZATIONS_COLLECTION_ID!,
+  menuCustomizationsCollectionId: process.env.EXPO_PUBLIC_APPWRITE_MENU_CUSTOMIZATIONS_COLLECTION_ID!,
+  bucketId: process.env.EXPO_PUBLIC_APPWRITE_BUCKET_ID!,
 }
 
 export const client = new Client()
@@ -15,6 +20,7 @@ client.setEndpoint(config.endpoint).setProject(config.projectId).setPlatform(con
 
 export const account = new Account(client)
 export const databases = new Databases(client)
+export const storage = new Storage(client);
 
 const avatar = new Avatars(client)
 
@@ -68,6 +74,37 @@ export const getCurrentUser = async () => {
       throw new Error('User not found')
     }
     return currentUser.documents[0]
+  } catch (error) {
+    throw new Error(error as string)
+  }
+}
+
+export const getMenu = async ({category, query}: GetMenuParams) => {
+  try {
+    const queries: string[] = []
+    if(category) {
+      queries.push(Query.equal('category', category))
+    }
+    if(query) {
+      queries.push(Query.search('name', query))
+    }
+    const menu = await databases.listDocuments(config.databaseId, config.menuCollectionId, queries)
+    if(!menu) {
+      throw new Error('Failed to fetch menu')
+    }
+    return menu.documents
+  } catch (error) {
+    throw new Error(error as string)
+  }
+}
+
+export const getCategories = async () => {
+  try {
+    const categories = await databases.listDocuments(config.databaseId, config.categoryCollectionId)
+    if(!categories) {
+      throw new Error('Failed to fetch categories')
+    }
+    return categories.documents
   } catch (error) {
     throw new Error(error as string)
   }
