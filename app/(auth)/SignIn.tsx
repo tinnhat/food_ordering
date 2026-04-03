@@ -3,6 +3,8 @@ import React, { useState } from 'react'
 import { Link, router } from 'expo-router'
 import CustomInput from '@/components/CustomInput'
 import CustomButton from '@/components/CustomButton'
+import { signIn } from '@/lib/appwrite'
+import * as Sentry from '@sentry/react-native'
 
 const SignIn = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -18,9 +20,15 @@ const SignIn = () => {
     }
     setIsSubmitting(true)
     try {
+      await signIn({
+        email: formData.email,
+        password: formData.password,
+      })
+      Alert.alert('Success', 'Signed in successfully')
       router.replace('/')
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Something went wrong')
+      Sentry.captureException(error)
     } finally {
       setIsSubmitting(false)
     }
